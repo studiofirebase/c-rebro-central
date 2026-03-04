@@ -1,0 +1,48 @@
+#!/usr/bin/env zsh
+set -e
+
+cmd="$1"
+workspace="$PWD"
+python_cmd="python3"
+
+if [[ -z "$cmd" ]]; then
+  echo "Uso: cerebro central|index|watch|chat"
+  exit 1
+fi
+
+if [[ ! -f "$workspace/package.json" ]]; then
+  if [[ ! -d "$workspace/ai-core" ]]; then
+    echo "Erro: projeto inválido em $workspace"
+    exit 1
+  fi
+fi
+
+cd "$workspace"
+
+if [[ -x "$workspace/.venv/bin/python" ]]; then
+  python_cmd="$workspace/.venv/bin/python"
+fi
+
+if [[ "$cmd" == "central" ]]; then
+  exec "$python_cmd" ai-core/main.py
+fi
+
+if [[ "$cmd" == "index" ]]; then
+  exec "$python_cmd" -c 'import sys; sys.path.insert(0, "ai-core"); from indexer import rebuild_index; print(f"chunks={rebuild_index()}")'
+fi
+
+if [[ "$cmd" == "watch" ]]; then
+  exec "$python_cmd" ai-core/watch.py
+fi
+
+if [[ "$cmd" == "chat" ]]; then
+  if [[ -f "chat_cli.py" ]]; then
+    exec "$python_cmd" chat_cli.py
+  fi
+  echo "Erro: chat_cli.py não encontrado"
+  exit 1
+fi
+
+echo "Comando inválido: $cmd"
+echo "Uso: cerebro central|index|watch|chat"
+exit 1
